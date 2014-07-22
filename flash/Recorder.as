@@ -184,7 +184,7 @@ package
     
     protected function showFlash():void
     {
-      Security.showSettings(SecurityPanel.MICROPHONE);
+      Security.showSettings("privacy");
       triggerEvent('showFlash',''); 
     }
     
