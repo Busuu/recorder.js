@@ -1,17 +1,11 @@
 var Recorder = {
-  version: 1.13,
   swfObject: null,
   _callbacks: {},
   _events: {},
   _initialized: false,
-  _flashBlockCatched: false,
   options: {},
   initialize: function(options){
     this.options = options || {};
-
-    if(window.location.protocol === "file:"){
-      throw new Error("Due to Adobe Flash restrictions it is not possible to use the Recorder through the file:// protocol. Please use an http server.");
-    }
 
     if(!this.options.flashContainer){
       this._setupFlashContainer();
@@ -19,12 +13,7 @@ var Recorder = {
 
     this.bind('initialized', function(){
       Recorder._initialized = true;
-      if(Recorder._flashBlockCatched){
-        Recorder._defaultOnHideFlash();
-      }
-      if(options.initialized){
-        options.initialized();
-      }
+      if (options.initialized) { options.initialized(); }
     });
 
     this.bind('showFlash', this.options.onFlashSecurity || this._defaultOnShowFlash);
@@ -33,6 +22,10 @@ var Recorder = {
 
   clear: function(){
     Recorder._events = {};
+  },
+
+  setActiveBuffer: function(index){
+    return this.flashInterface().setActiveBuffer(index);
   },
 
   record: function(options){
@@ -60,6 +53,7 @@ var Recorder = {
   play: function(options){
     options = options || {};
     this.clearBindings("playingProgress");
+    this.clearBindings("playingStop");
     this.bind('playingProgress', options['progress']);
     this.bind('playingStop', options['finished']);
     
@@ -77,19 +71,8 @@ var Recorder = {
     this.flashInterface().upload(options.url, options.audioParam, options.params);
   },
   
-  audioData: function(newData){
-    var delimiter = ";", newDataSerialized, stringData, data = [], sample;
-    if(newData){
-      newDataSerialized = newData.join(";");
-    }
-    stringData = this.flashInterface().audioData(newDataSerialized).split(delimiter);
-    for(var i=0; i < stringData.length; i ++){
-      sample = parseFloat(stringData[i]);
-      if(!isNaN(sample)){
-        data.push(sample);
-      }
-    }
-    return data;
+  audioData: function(){
+    return this.flashInterface().audioData().split(";");
   },
 
   request: function(method, uri, contentType, data, callback){
@@ -108,12 +91,9 @@ var Recorder = {
   
   triggerEvent: function(eventName, arg0, arg1){
     Recorder._executeInWindowContext(function(){
-      if (!Recorder._events[eventName]) {
-        return;
-      }
-      for(var i = 0, len = Recorder._events[eventName].length; i < len; i++){
-        if(Recorder._events[eventName][i]){
-          Recorder._events[eventName][i].apply(Recorder, [arg0, arg1]);
+      for(var cb in Recorder._events[eventName]){
+        if(Recorder._events[eventName][cb]){
+          Recorder._events[eventName][cb].apply(Recorder, [arg0, arg1]);
         }
       }
     });
@@ -148,7 +128,7 @@ var Recorder = {
   _setupFlashContainer: function(){
     this.options.flashContainer = document.createElement("div");
     this.options.flashContainer.setAttribute("id", "recorderFlashContainer");
-    this.options.flashContainer.setAttribute("style", "position: fixed; left: -9999px; top: -9999px; width: 230px; height: 140px; margin-left: 10px; border-top: 6px solid rgba(128, 128, 128, 0.6); border-bottom: 6px solid rgba(128, 128, 128, 0.6); border-radius: 5px 5px; padding-bottom: 1px; padding-right: 1px;");
+    this.options.flashContainer.setAttribute("style", "position: fixed; left: -9999px; top: -9999px; width: 230px; height: 140px; margin-left: 10px; border-top: 6px solid rgba(128, 128, 128, 0.6); border-bottom: 6px solid rgba(128, 128, 128, 0.6); border-radius: 5px 5px; padding-bottom: 1px; padding-right: 1px; z-index: 9999;");
     document.body.appendChild(this.options.flashContainer);
   },
 
@@ -189,7 +169,6 @@ var Recorder = {
   _checkForFlashBlock: function(){
     window.setTimeout(function(){
       if(!Recorder._initialized){
-        Recorder._flashBlockCatched = true;
         Recorder.triggerEvent("showFlash");
       }
     }, 500);
