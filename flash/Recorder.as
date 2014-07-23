@@ -21,7 +21,6 @@ package
   import mx.collections.ArrayCollection;
   
   import ru.inspirit.net.MultipartURLLoader;
-
   
   public class Recorder
   {
@@ -38,13 +37,14 @@ package
       ExternalInterface.addCallback("upload",         this.upload);
       ExternalInterface.addCallback("audioData",      this.audioData);
       ExternalInterface.addCallback("showFlash",      this.showFlash);
+      ExternalInterface.addCallback("setupMicrophone",       this.setupMicrophone);
+      ExternalInterface.addCallback("isMicMuted",            this.isMicMuted);
       ExternalInterface.addCallback("recordingDuration",     this.recordingDuration);
       ExternalInterface.addCallback("setActiveBuffer",       this.setActiveBuffer);
       triggerEvent("initialized", {});
       logger.log("Recorder initialized");
     }
 
-    
     protected var isRecording:Boolean = false;
     protected var isPlaying:Boolean = false;
     protected var microphoneWasMuted:Boolean;
@@ -184,10 +184,18 @@ package
     
     protected function showFlash():void
     {
+
       Security.showSettings("privacy");
-      triggerEvent('showFlash',''); 
+      triggerEvent('showFlash','');
+
     }
-    
+
+    protected function isMicMuted():Boolean
+    {
+      microphone = Microphone.getMicrophone();
+      return microphone.muted;
+    }
+
     /* Recording Helper */ 
     protected function setupMicrophone():void
     {
