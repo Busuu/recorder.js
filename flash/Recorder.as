@@ -139,7 +139,7 @@ package
     
     /* Networking functions */ 
     
-    protected function upload(uri:String, audioParam:String, parameters): void
+    protected function upload(uri:String, fileName: String, audioParam:String): void
     {
       logger.log("upload");
       buffers[buffer_ind].position = 0;
@@ -152,17 +152,7 @@ package
         logger.log('uploading done');
       }
       
-      if(getQualifiedClassName(parameters.constructor) == "Array"){
-        for(var i=0; i<parameters.length; i++){
-          ml.addVariable(parameters[i][0], parameters[i][1]);
-        }
-      }else{
-        for(var k in parameters){
-          ml.addVariable(k, parameters[k]);
-        }
-      }
-      
-      ml.addFile(wav, 'audio.wav', audioParam);
+      ml.addFile(wav, fileName, audioParam);
       ml.load(uri, false);
       
     }
