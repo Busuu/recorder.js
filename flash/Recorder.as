@@ -182,7 +182,9 @@ package
 
     protected function isMicMuted():Boolean
     {
-      microphone = Microphone.getMicrophone();
+      if (!microphone) {
+        setupMicrophone()
+      }
       return microphone.muted;
     }
 
